@@ -1,11 +1,5 @@
 
-import heapq
-from multiprocessing import Pool
-import multiprocessing
-
-def cal_toys(package):
-
-    case, toys = package[0], package[1]
+def cal_toys(case, toys):
     
     SUM_enjoyment_time = sum([x[0] for x in toys])
 
@@ -17,37 +11,49 @@ def cal_toys(package):
     remove_count_when_max = 0
 
     toy_used = []
-    #toy_reformat = [(toy[0] + toy[1], toy[0]) for toy in toys]
 
     for index, add_toy in enumerate(toys):
         cur_time += add_toy[0]
         
-        toy_used.append((add_toy[0] + add_toy[1], add_toy[0]))
+        toy_used.append(add_toy)
 
         keep_running = True
+        something_remove = False
+
+        previous_remove_count = remove_count
 
         while keep_running == True and len(toy_used) > 0:
-            keep_running = False
             
-            big_guy = heapq.nlargest(1, toy_used)[0]
+            max_violate_sum = -1
+            max_violate_index = -1
 
-            if big_guy[0] > SUM_enjoyment_time:
-                cur_time -= 2 * big_guy[1]
-                SUM_enjoyment_time -= big_guy[1]
-                remove_count += 1 
+            for index, toy in enumerate(toy_used):
+                if toy[0] + toy[1] > SUM_enjoyment_time:
+                    if toy[0] + toy[1] > max_violate_sum:
+                        max_violate_sum = toy[0] + toy[1]
+                        max_violate_index = index
+            
+            keep_running = False
+            #print (toy_used, max_violate_index)
 
-                heapq._heapify_max(toy_used) 
-
-                heapq._heappop_max(toy_used)
-
+            if max_violate_sum != -1 and max_violate_index != -1:
+                cur_time -= 2 * toy_used[max_violate_index][0]
+                
+                SUM_enjoyment_time -= toy_used[max_violate_index][0]
+                remove_count += 1  
                 keep_running = True
+                something_remove = True
+                del toy_used[max_violate_index]
 
             #print ("before", index, cur_time, max_time, remove_count, remove_count_when_max)
             if cur_time > max_time:
                 max_time = cur_time
-
                 remove_count_when_max = remove_count
             #print ("after", index, cur_time, max_time, remove_count, remove_count_when_max, "\n\n")
+
+
+
+    #print (toy_time, add_order, remove_count, toy_used, cur_time)
 
     if len(toy_used) > 0:
         print("Case #", case, ": ",  len(toys) - len(toy_used), " ", "INDEFINITELY", sep="")
@@ -60,8 +66,6 @@ def cal_toys(package):
 
 n = int(input())
 
-queue = []
-
 for i in range(n):
     total_toys = int(input())
     toys = []
@@ -72,10 +76,5 @@ for i in range(n):
     case = i + 1 
 
 
-    queue.append((case, toys))
+    cal_toys(case, toys)
 
-num_of_cpu = multiprocessing.cpu_count()
-
-with Pool(num_of_cpu) as P:
-
-    P.map(cal_toys, queue)
