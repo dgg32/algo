@@ -1,13 +1,26 @@
 
 import heapq
-from multiprocessing import Pool
-import multiprocessing
 
-def cal_toys(package):
+import time
 
-    case, toys = package[0], package[1]
+#start = time.time()
+
     
-    SUM_enjoyment_time = sum([x[0] for x in toys])
+
+n = int(input())
+
+
+for i in range(n):
+    total_toys = int(input())
+    toys = []
+    
+    SUM_enjoyment_time = 0
+    for _ in range(total_toys):
+        toy = [int(s) for s in input().split(" ")]
+        toys.append(toy)
+        SUM_enjoyment_time += toy[0]
+        
+    case = i + 1 
 
     cur_time = SUM_enjoyment_time
 
@@ -17,32 +30,30 @@ def cal_toys(package):
     remove_count_when_max = 0
 
     toy_used = []
-    #toy_reformat = [(toy[0] + toy[1], toy[0]) for toy in toys]
 
-    for index, add_toy in enumerate(toys):
-        cur_time += add_toy[0]
+    for add_toy in toys:
         
-        toy_used.append((add_toy[0] + add_toy[1], add_toy[0]))
+        if (add_toy[0] + add_toy[1]) > SUM_enjoyment_time:
+            SUM_enjoyment_time -= add_toy[0]
+            remove_count += 1
+            cur_time -= add_toy[0]
 
-        keep_running = True
-
-        while keep_running == True and len(toy_used) > 0:
-            keep_running = False
+            #keep_running = True
             
-            big_guy = heapq.nlargest(1, toy_used)[0]
-
-            if big_guy[0] > SUM_enjoyment_time:
-                cur_time -= 2 * big_guy[1]
-                SUM_enjoyment_time -= big_guy[1]
+            while len(toy_used) > 0 and -1 * toy_used[0][0] > SUM_enjoyment_time:
+                big_guy_enjoyment_time = toy_used[0][1]
+                cur_time -= 2 * big_guy_enjoyment_time
+                SUM_enjoyment_time -= big_guy_enjoyment_time
                 remove_count += 1 
 
-                heapq._heapify_max(toy_used) 
+                heapq.heappop(toy_used)
+            
+        else:
 
-                heapq._heappop_max(toy_used)
 
-                keep_running = True
-
-            #print ("before", index, cur_time, max_time, remove_count, remove_count_when_max)
+            heapq.heappush(toy_used, (-1 * (add_toy[0] + add_toy[1]), add_toy[0]))
+            cur_time += add_toy[0]
+                #print ("before", index, cur_time, max_time, remove_count, remove_count_when_max)
             if cur_time > max_time:
                 max_time = cur_time
 
@@ -52,30 +63,8 @@ def cal_toys(package):
     if len(toy_used) > 0:
         print("Case #", case, ": ",  len(toys) - len(toy_used), " ", "INDEFINITELY", sep="")
     else:
-        #print ("toy_used", toy_used)
-        #max_time += sum([x[0] for x in toy_used])
         print("Case #", case, ": ", remove_count_when_max, " ", max_time, sep="")
-        #pass
-    
-
-n = int(input())
-
-queue = []
-
-for i in range(n):
-    total_toys = int(input())
-    toys = []
-    
-    for _ in range(total_toys):
-        toys.append([int(s) for s in input().split(" ")])
-        
-    case = i + 1 
 
 
-    queue.append((case, toys))
-
-num_of_cpu = multiprocessing.cpu_count()
-
-with Pool(num_of_cpu) as P:
-
-    P.map(cal_toys, queue)
+#end = time.time()
+#print(end - start)
